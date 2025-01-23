@@ -1,1 +1,8 @@
-fret
+python-telegram-bot
+pynput
+mss
+pycryptodome
+opencv-python
+pyautogui
+numpy
+pywin32
